@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel - Users List</title>
+  <link rel="stylesheet" href="css/output.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen p-6 font-inter">
+  <div class="max-w-7xl mx-auto bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-semibold text-green-700">Registered Farmers</h1>
+      <p id="successMessage" class="hidden px-4 py-2 text-center">Registration successful!</p>
+      <button id="logoutBtn"
+        class="border text-green-800 font-semibold px-6 py-2 rounded-xl shadow hover:bg-gray-200 transition">
+        Logout
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-300 divide-y divide-gray-200">
+        <thead class="bg-green-100">
+          <tr>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider border-r border-green-200">
+              NIDA</th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider border-r border-green-200">
+              Name</th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider border-r border-green-200">
+              Wallet</th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider border-r border-green-200">
+              Role</th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider border-r border-green-200">
+              Tokens</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Issue</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function fetchUsers() {
+      try {
+        const response = await fetch('http://localhost:5000/admin/users');
+        const data = await response.json();
+
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+
+        data.users.forEach(user => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-green-50 transition';
+
+          const tokenButtonId = `issue-${user.nida}-${user.walletAddress}`;
+
+          const tokenCellContent = user.role.toLowerCase() === 'admin'
+            ? `<span class="text-gray-500">—</span>`
+            : `<button id="${tokenButtonId}" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-sm">
+              Issue Tokens
+            </button>`;
+
+          row.innerHTML = `
+          <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">${user.nida}</td>
+          <td class="px-4 py-2 text-sm font-medium text-green-800 border-r border-gray-200">${user.name}</td>
+          <td class="px-4 py-2 text-xs text-gray-600 break-words max-w-xs border-r border-gray-200">${user.walletAddress}</td>
+          <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">${user.role}</td>
+          <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">${user.totaltokens}</td>
+          <td class="px-4 py-2 text-center">${tokenCellContent}</td>
+        `;
+
+          tbody.appendChild(row);
+
+          // Add event listener only if user is not admin
+          if (user.role.toLowerCase() !== 'admin') {
+            const issueBtn = document.getElementById(tokenButtonId);
+            issueBtn.addEventListener('click', async () => {
+              const amount = 100;
+
+              try {
+                const response = await fetch("http://localhost:5000/admin/issue-tokens", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    walletAddress: user.walletAddress,
+                    nida: user.nida,
+                    amount
+                  })
+                });
+
+                setTimeout(fetchUsers, 100);
+
+              } catch (err) {
+                alert("Token issuance failed.");
+                console.error(err);
+              }
+            });
+          }
+        });
+      } catch (error) {
+        alert('Failed to fetch users');
+        console.error(error);
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    fetchUsers();
+  </script>
+
+</body>
+
+</html>

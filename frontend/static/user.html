@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Smart Subsidy System</title>
+  <link href="./css/output.css" rel="stylesheet" />
+</head>
+
+<body class="bg-green-50 min-h-screen flex items-center justify-center px-4 font-inter">
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-2xl font-bold text-green-700">
+        🌿 Welcome, <span class="py-3" id="userName"></span>
+      </h1>
+      <button id="logoutBtn"
+        class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl transition">Logout</button>
+    </div>
+
+    <div class="mb-6">
+        <div class="flex flex-col mb-4">
+              <span class="font-semibold text-gray-400">Wallet Address</span>
+              <span class="text-xl" id="walletAddress">Loading...</span>
+        </div>
+        <div class="flex flex-col mb-4">
+              <span class="font-semibold text-gray-400">Tokens</span>
+              <span class="text-xl" id="totalTokens">Loading...</span>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    const storedNida = localStorage.getItem("nida");
+
+    if (!storedNida) {
+      alert("You are not logged in. Redirecting to login page...");
+      window.location.href = "login.html";
+    }
+
+    const userNameEl = document.getElementById("userName");
+    const walletAddressEl = document.getElementById("walletAddress");
+    const totalTokensEl = document.getElementById("totalTokens");
+
+    async function fetchUserData() {
+      try {
+        const res = await fetch(`http://localhost:5000/user/${storedNida}`);
+        const user = await res.json();
+
+        userNameEl.textContent = user.name;
+        walletAddressEl.textContent = user.walletAddress;
+        totalTokensEl.textContent = user.totalTokens ?? "0";
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchUserData();
+
+    // Logout functionality
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+
+</html>
